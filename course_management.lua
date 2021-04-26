@@ -778,34 +778,37 @@ function courseplay.courses:saveCourseToXml(course_id, cpCManXml, forceCourseSav
         		radius='String',
 				mustreach='Bool',
 				align='Bool'};
-
+			local n = 1
 			for k, v in pairs(cp_course.waypoints) do
-				local y = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, v.cx, 0, v.cz)
-				local waypoint = {
-					-- Required Values
-					-- be nice to our fellow modders and write y to the saved course
-					pos =   ('%.2f %.2f %.2f'):format(v.cx, y, v.cz);
-					angle = ('%.2f'):format(v.angle);
-					speed = ('%d'):format(v.speed or 0);
+				if k == 1 or k == #cp_course.waypoints or (v.lane and v.lane < 0) or v.turnStart or v.turnEnd then
+					local y = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, v.cx, 0, v.cz)
+					local waypoint = {
+						-- Required Values
+						-- be nice to our fellow modders and write y to the saved course
+						pos =   ('%.2f %.2f %.2f'):format(v.cx, y, v.cz);
+						angle = ('%.2f'):format(v.angle);
+						speed = ('%d'):format(v.speed or 0);
 
-					-- Optional Values
-					rev =		   v.rev and courseplay:boolToInt(v.rev) or nil;
-					wait =		   v.wait and courseplay:boolToInt(v.wait) or nil;
-					unload =	   v.unload and courseplay:boolToInt(v.unload) or nil;
-					crossing =	   v.crossing and courseplay:boolToInt(v.crossing) or nil;
-					generated =	   v.generated and v.generated or nil;
-					turnstart =    v.turnStart and courseplay:boolToInt(v.turnStart) or nil;
-					turnend =	   v.turnEnd and courseplay:boolToInt(v.turnEnd) or nil;
-					ridgemarker = (v.ridgeMarker and v.ridgeMarker ~= 0) and v.ridgeMarker or nil;
-					lane =		  (v.lane and v.lane < 0) and v.lane or nil;
-					headlandheightforturn = v.headlandHeightForTurn and v.headlandHeightForTurn or nil;
-					isconnectingtrack =	v.isConnectingTrack and v.isConnectingTrack or nil;
-          			radius = v.radius and ('%.1f'):format( v.radius ) or nil;
-					mustreach =	v.mustReach and v.mustReach or nil;
-					align = v.align and v.align or nil
-				};
+						-- Optional Values
+						rev =		   v.rev and courseplay:boolToInt(v.rev) or nil;
+						wait =		   v.wait and courseplay:boolToInt(v.wait) or nil;
+						unload =	   v.unload and courseplay:boolToInt(v.unload) or nil;
+						crossing =	   v.crossing and courseplay:boolToInt(v.crossing) or nil;
+						generated =	   v.generated and v.generated or nil;
+						turnstart =    v.turnStart and courseplay:boolToInt(v.turnStart) or nil;
+						turnend =	   v.turnEnd and courseplay:boolToInt(v.turnEnd) or nil;
+						ridgemarker = (v.ridgeMarker and v.ridgeMarker ~= 0) and v.ridgeMarker or nil;
+						lane =		  (v.lane and v.lane < 0) and v.lane or nil;
+						headlandheightforturn = v.headlandHeightForTurn and v.headlandHeightForTurn or nil;
+						isconnectingtrack =	v.isConnectingTrack and v.isConnectingTrack or nil;
+						radius = v.radius and ('%.1f'):format( v.radius ) or nil;
+						mustreach =	v.mustReach and v.mustReach or nil;
+						align = v.align and v.align or nil
+					};
 
-				waypoints[k] = waypoint;
+					waypoints[n] = waypoint;
+					n = n + 1
+				end
 			end
 
 			courseplay.utils.setMultipleXMLNodes(courseXml, "course", 'waypoint', waypoints, types, true);
@@ -1719,6 +1722,9 @@ function courseplay.courses:loadCourseFromFile(course)
 			align = align
 		};
 		wpNum = wpNum + 1;
+		if wpNum % 1000 == 0 then
+			courseplay.debugFormat(courseplay.DBG_COURSES, '%d waypoints loaded ...', wpNum)
+		end
 	end; -- END while true (waypoints)
 	course.waypoints =			  waypoints
 	course.workWidth =			  workWidth
@@ -1726,6 +1732,8 @@ function courseplay.courses:loadCourseFromFile(course)
 	course.headlandDirectionCW =  headlandDirectionCW
 	course.multiTools = 		  multiTools
 	delete(courseXml);
+
+	courseplay.debugFormat(courseplay.DBG_COURSES, 'Course with %d waypoints loaded.', #course.waypoints)
 end
 
 

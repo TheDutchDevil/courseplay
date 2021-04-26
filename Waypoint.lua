@@ -1054,7 +1054,6 @@ function Course:extend(length, dx, dz)
 	local lastWp = self.waypoints[#self.waypoints]
 	local len = self.waypoints[#self.waypoints - 1].dToNext
 	dx, dz = dx or lastWp.dx, dz or lastWp.dz
-	print(dx, dz)
 	local wpDistance = 2
 	for i = wpDistance, math.max(length, wpDistance), wpDistance do
 		lastWp = self.waypoints[#self.waypoints]
@@ -1194,9 +1193,13 @@ function Course:createLegacyCourse()
 		local x, _, z = self:getWaypointPosition(i)
 		legacyCourse[i] = {
 			x = x,
+			cx = x, -- darn legacy cx/cz, why? why? why cx? why not just x? please someone explain...
 			z = z,
+			cz = z,
 			rev = self:isReverseAt(i),
-			angle = self:getWaypointAngleDeg(i)
+			angle = self:getWaypointAngleDeg(i),
+			unload = self:isUnloadAt(i),
+			wait = self:isWaitAt(i)
 		}
 	end
 	legacyCourse[1].crossing = true
@@ -1571,5 +1574,31 @@ function Course:getProgress(ix)
 	else
 		return self.waypoints[ix].dToHere / self.length, ix
 	end
+end
+
+function Course:addWaypointsForRows()
+	local waypoints = self:initWaypoints()
+
+	courseplay.debugFormat(courseplay.DBG_COURSES, 'Course: adding waypoints for rows')
+
+	for i = 1, #self.waypoints - 1 do
+		table.insert(waypoints, Waypoint(self.waypoints[i]))
+		local p = self.waypoints[i]
+		if self:isTurnEndAtIx(i) and self:isTurnStartAtIx(i + 1) and
+			p.dToNext > courseGenerator.waypointDistance + 0.1 then
+			courseplay.debugFormat(courseplay.DBG_COURSES, 'Course: adding waypoints for row, length %.1f', p.dToNext)
+			for n = 1, (p.dToNext / courseGenerator.waypointDistance) - 1 do
+				local newWp = Waypoint(p)
+				newWp.turnEnd = nil
+				newWp.x = p.x + n * courseGenerator.waypointDistance * p.dx
+				newWp.z = p.z + n * courseGenerator.waypointDistance * p.dz
+				table.insert(waypoints, newWp)
+			end
+		end
+	end
+	table.insert(waypoints, Waypoint(self.waypoints[#self.waypoints]))
+	self.waypoints = waypoints
+	courseplay.debugFormat(courseplay.DBG_COURSES, 'Course: has now %d waypoints', #self.waypoints)
+	self:enrichWaypointData()
 end
 
