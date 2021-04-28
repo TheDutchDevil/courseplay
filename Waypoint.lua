@@ -1658,8 +1658,8 @@ function Course.deserializeWaypoints(serializedWaypoints)
 		if p.x then
 			-- yes, it is going to be a big day!
 			p.cx, p.cy, p.cz = p.x, p.y, p.z
-			p.speed = tonumber(fields[2])
-			p.angle = tonumber(fields[3])
+			p.angle = tonumber(fields[2])
+			p.speed = tonumber(fields[3])
 			local turn = fields[4]
 			p.turnStart = turn == 'S'
 			p.turnEnd = turn == 'E'
