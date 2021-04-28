@@ -1606,6 +1606,10 @@ function Course:addWaypointsForRows()
 	self:enrichWaypointData()
 end
 
+--- Use a single XML node to store all waypoints. Waypoints are separated by a '|' and a newline, latter for better
+--- readability only.
+--- The attributes of individual waypoints are separated by a ';', the order of the attributes can be read from the
+--- code below.
 function Course.serializeWaypoints(waypoints)
 	local function serializeBool(bool)
 		return bool and 'Y' or 'N'
@@ -1615,7 +1619,7 @@ function Course.serializeWaypoints(waypoints)
 		return number and string.format('%d', number) or ''
 	end
 
-	local serializedWaypoints = ''
+	local serializedWaypoints = '\n' -- (pure cosmetic)
 	for _, p in ipairs(waypoints) do
 		-- we are going to celebrate once we get rid of the cx, cz variables!
 		local x, z = p.x or p.cx, p.z or p.cz
